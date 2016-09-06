@@ -92,7 +92,7 @@ public class RestconfManager implements RestconfService {
         YdtContext rootNode = ydtResponse.getRootNode();
         String requestNodeName = ParserUtils.getLastSegmentNodeName(identifier);
 
-        return ParserUtils.convertYdtToJson(requestNodeName, rootNode, ymsService.getYdtWalker());
+        return ParserUtils.convertYdtToJson(rootNode, ymsService.getYdtWalker());
     }
 
     @Override

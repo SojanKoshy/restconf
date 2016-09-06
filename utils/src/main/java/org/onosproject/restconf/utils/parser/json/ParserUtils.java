@@ -95,9 +95,9 @@ public final class ParserUtils {
      * @param walker     abstraction of an entity which provides interfaces for YDT walk.
      * @return the JSON node corresponding the YANG data
      */
-    public static ObjectNode convertYdtToJson(String rootName, YdtContext ydtContext, YdtWalker walker) {
+    public static ObjectNode convertYdtToJson(YdtContext ydtContext, YdtWalker walker) {
         JsonBuilder builder = new DefaultJsonBuilder();
-        YdtListener listener = new YdtToJsonListener(rootName, builder);
+        YdtListener listener = new YdtToJsonListener(ydtContext.getName(), builder);
         walker.walk(listener, ydtContext);
         return builder.getTreeNode();
     }
@@ -167,7 +167,9 @@ public final class ParserUtils {
         } else {
             //TODO need to check the interface,
             //TODO for it should be a MULTI_INSTANCE_LEAF_VALUE_NODE here
-            builder.addLeaf(nodeName, null, keyStr);
+            List<String> strings = Lists.newArrayList(keyStr);
+            builder.addChild(nodeName, null);
+            //builder.addKeyLeafs(strings);
         }
         return builder;
     }
