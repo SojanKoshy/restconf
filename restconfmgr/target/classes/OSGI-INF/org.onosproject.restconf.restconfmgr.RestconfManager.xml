@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" immediate="true" name="org.onosproject.restconf.restconfmgr.RestconfManager" activate="activate" deactivate="deactivate">
+    <implementation class="org.onosproject.restconf.restconfmgr.RestconfManager"/>
+    <service servicefactory="false">
+        <provide interface="org.onosproject.restconf.api.RestconfService"/>
+    </service>
+    <property name="service.pid" value="org.onosproject.restconf.restconfmgr.RestconfManager"/>
+    <reference name="ymsService" interface="org.onosproject.yms.ymsm.YmsService" cardinality="1..1" policy="static" bind="bindYmsService" unbind="unbindYmsService"/>
+</scr:component>
