@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016-present Open Networking Laboratory
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.onosproject.restconf.utils.parser.json;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -41,17 +57,15 @@ public final class ParserUtils {
      *
      * @param identifier the uri identifier from web request.
      * @param builder    the base ydt builder
-     * @return the YDT builder with the tree info of identifier
      */
-    public static YdtBuilder convertUriToYdt(String identifier, YdtBuilder builder,
-                                             YdtContextOperationType ydtOpType) {
+    public static void convertUriToYdt(String identifier, YdtBuilder builder,
+                                       YdtContextOperationType ydtOpType) {
         checkNotNull(identifier, "uri identifier should not be null");
         List<String> segmentPaths = urlPathArgsDecode(SLASH_SPLITTER.split(identifier));
         if (segmentPaths.isEmpty()) {
-            return null;
+            return;
         }
         processPathSegments(segmentPaths, builder, ydtOpType);
-        return builder;
     }
 
     /**
@@ -79,13 +93,11 @@ public final class ParserUtils {
      *
      * @param objectNode the objectNode from web request.
      * @param builder    the base ydt builder
-     * @return the YDT builder with the tree info of identifier
      */
-    public static YdtBuilder convertJsonToYdt(ObjectNode objectNode, YdtBuilder builder) {
+    public static void convertJsonToYdt(ObjectNode objectNode, YdtBuilder builder) {
         JsonWalker walker = new DefaultJsonWalker();
         JsonToYdtListener listener = new JsonToYdtListener(builder);
         walker.walk(listener, null, objectNode);
-        return builder;
     }
 
     /**
@@ -95,9 +107,9 @@ public final class ParserUtils {
      * @param walker     abstraction of an entity which provides interfaces for YDT walk.
      * @return the JSON node corresponding the YANG data
      */
-    public static ObjectNode convertYdtToJson(YdtContext ydtContext, YdtWalker walker) {
+    public static ObjectNode convertYdtToJson(String rootName, YdtContext ydtContext, YdtWalker walker) {
         JsonBuilder builder = new DefaultJsonBuilder();
-        YdtListener listener = new YdtToJsonListener(ydtContext.getName(), builder);
+        YdtListener listener = new YdtToJsonListener(rootName, builder);
         walker.walk(listener, ydtContext);
         return builder.getTreeNode();
     }
@@ -169,7 +181,7 @@ public final class ParserUtils {
             //TODO for it should be a MULTI_INSTANCE_LEAF_VALUE_NODE here
             List<String> strings = Lists.newArrayList(keyStr);
             builder.addChild(nodeName, null);
-            //builder.addKeyLeafs(strings);
+            //builder.addLeaf(nodeName, null, keyStr);
         }
         return builder;
     }

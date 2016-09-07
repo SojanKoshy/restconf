@@ -38,7 +38,7 @@ public class DefaultJsonWalker implements JsonWalker {
         jsonListener.enterJsonNode(fieldName, objectNode);
         //the node has no children, then exist and return.
         if (!objectNode.isContainerNode()) {
-            jsonListener.exitJsonNode(nodeType);
+            jsonListener.exitJsonNode(objectNode);
             return;
         }
 
@@ -56,10 +56,10 @@ public class DefaultJsonWalker implements JsonWalker {
                 walk(jsonListener, key, value);
             } else {
                 jsonListener.enterJsonNode(key, value);
-                jsonListener.exitJsonNode(value.getNodeType());
+                jsonListener.exitJsonNode(value);
             }
         }
-        jsonListener.exitJsonNode(nodeType);
+        jsonListener.exitJsonNode(objectNode);
     }
 
 
@@ -95,23 +95,25 @@ public class DefaultJsonWalker implements JsonWalker {
             return;
         }
         //enter the array node.
-        jsonListener.enterJsonNode(fieldName, rootNode);
-        //the node has no children, then exist and return.
-        if (!rootNode.isContainerNode()) {
-            jsonListener.exitJsonNode(rootNode.getNodeType());
-            return;
-        }
 
+
+        int unContainerNodeCount = 0;
+        int total = 0;
         Iterator<JsonNode> children = rootNode.elements();
         while (children.hasNext()) {
             JsonNode currentChild = children.next();
             if (currentChild.isContainerNode()) {
+                jsonListener.enterJsonNode(fieldName, rootNode);
                 walk(jsonListener, "", currentChild);
             } else {
-                jsonListener.enterJsonNode("", currentChild);
-                jsonListener.exitJsonNode(currentChild.getNodeType());
+                unContainerNodeCount++;
             }
+            total++;
         }
-        jsonListener.exitJsonNode(rootNode.getNodeType());
+        //all children is not container, it's a leaf-list in YANG.
+        if (unContainerNodeCount == total) {
+            jsonListener.enterJsonNode(fieldName, rootNode);
+        }
+        jsonListener.exitJsonNode(rootNode);
     }
 }

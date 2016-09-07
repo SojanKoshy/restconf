@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016-present Open Networking Laboratory
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.onosproject.restconf.utils.parser.json;
 
 import com.fasterxml.jackson.databind.node.JsonNodeType;
@@ -29,7 +45,9 @@ public class YdtToJsonListener implements YdtListener {
 
     @Override
     public void enterYdtNode(YdtContext ydtContext) {
-        if (ydtContext.getName().equals(rootName)) {
+        String name = ydtContext.getName();
+
+        if (name.equals(rootName)) {
             isBegin = true;
         }
         if (!isBegin) {
@@ -39,16 +57,20 @@ public class YdtToJsonListener implements YdtListener {
         switch (ydtContext.getYdtType()) {
 
             case SINGLE_INSTANCE_NODE:
-                jsonBuilder.addNodeTopHalf(ydtContext.getName(), JsonNodeType.OBJECT);
+                jsonBuilder.addNodeTopHalf(name, JsonNodeType.OBJECT);
                 break;
             case MULTI_INSTANCE_NODE:
-                jsonBuilder.addNodeTopHalf(ydtContext.getName(), JsonNodeType.ARRAY);
+                YdtContext preNode = ydtContext.getPreviousSibling();
+                if (preNode == null || !preNode.getName().equals(name)) {
+                    jsonBuilder.addNodeTopHalf(name, JsonNodeType.ARRAY);
+                }
+                jsonBuilder.addNodeTopHalf("", JsonNodeType.OBJECT);
                 break;
             case SINGLE_INSTANCE_LEAF_VALUE_NODE:
-                jsonBuilder.addNodeWithValueTopHalf(ydtContext.getName(), ydtContext.getValue());
+                jsonBuilder.addNodeWithValueTopHalf(name, ydtContext.getValue());
                 break;
             case MULTI_INSTANCE_LEAF_VALUE_NODE:
-                jsonBuilder.addNodeWithSetTopHalf(ydtContext.getName(), ydtContext.getValueSet());
+                jsonBuilder.addNodeWithSetTopHalf(name, ydtContext.getValueSet());
                 break;
             default:
                 throw new YdtParseException("unknown Ydt type"
@@ -59,10 +81,12 @@ public class YdtToJsonListener implements YdtListener {
 
     @Override
     public void exitYdtNode(YdtContext ydtContext) {
+        String curName = ydtContext.getName();
+
         if (!isBegin) {
             return;
         }
-        if (ydtContext.getName().equals(rootName)) {
+        if (curName.equals(rootName)) {
             isBegin = false;
         }
         switch (ydtContext.getYdtType()) {
@@ -71,7 +95,13 @@ public class YdtToJsonListener implements YdtListener {
                 jsonBuilder.addNodeBottomHalf(JsonNodeType.OBJECT);
                 break;
             case MULTI_INSTANCE_NODE:
-                jsonBuilder.addNodeBottomHalf(JsonNodeType.ARRAY);
+                YdtContext nextNode = ydtContext.getNextSibling();
+                if (nextNode == null || !nextNode.getName().equals(curName)) {
+                    jsonBuilder.addNodeBottomHalf(JsonNodeType.OBJECT);
+                    jsonBuilder.addNodeBottomHalf(JsonNodeType.ARRAY);
+                } else {
+                    jsonBuilder.addNodeBottomHalf(JsonNodeType.OBJECT);
+                }
                 break;
             case SINGLE_INSTANCE_LEAF_VALUE_NODE:
                 jsonBuilder.addNodeBottomHalf(JsonNodeType.STRING);

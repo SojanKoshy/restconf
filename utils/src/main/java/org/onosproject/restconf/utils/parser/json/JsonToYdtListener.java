@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import org.onosproject.restconf.utils.exceptions.JsonParseException;
 import org.onosproject.restconf.utils.parser.api.JsonListener;
 import org.onosproject.yms.ydt.YdtBuilder;
+import org.onosproject.yms.ydt.YdtContext;
 import org.onosproject.yms.ydt.YdtType;
 
 import java.util.HashSet;
@@ -36,6 +37,9 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 public class JsonToYdtListener implements JsonListener {
 
     private YdtBuilder ydtBuilder;
+    private static final String INPUT_FIELD_NAME = "input";
+    private static final int INPUT_FIELD_LENGTH = 2;
+    private YdtContext rpcModule;
 
     public JsonToYdtListener(YdtBuilder ydtBuilder) {
         this.ydtBuilder = ydtBuilder;
@@ -49,7 +53,17 @@ public class JsonToYdtListener implements JsonListener {
 
         switch (node.getNodeType()) {
             case OBJECT:
-                ydtBuilder.addChild(fieldName, null, YdtType.SINGLE_INSTANCE_NODE);
+                //for input, the filed name is something like
+                String[] segments = fieldName.split(":");
+                Boolean isLastInput = segments[INPUT_FIELD_LENGTH - 1].equals(INPUT_FIELD_NAME);
+
+                if (segments.length == INPUT_FIELD_LENGTH && isLastInput) {
+                    ydtBuilder.addChild(segments[0], null, YdtType.SINGLE_INSTANCE_NODE);
+                    rpcModule = ydtBuilder.getCurNode();
+                    ydtBuilder.addChild(segments[1], null, YdtType.SINGLE_INSTANCE_NODE);
+                } else {
+                    ydtBuilder.addChild(fieldName, null, YdtType.SINGLE_INSTANCE_NODE);
+                }
                 break;
             case ARRAY:
                 processArrayNode(fieldName, node);
@@ -67,14 +81,19 @@ public class JsonToYdtListener implements JsonListener {
             default:
                 throw new JsonParseException("Unsupported node type" + node.getNodeType()
                                                      + "filed name is %s" + fieldName);
-
         }
-
     }
 
     @Override
-    public void exitJsonNode(JsonNodeType nodeType) {
+    public void exitJsonNode(JsonNode jsonNode) {
         ydtBuilder.traverseToParent();
+        //if the current node is the RPC node, then should go to the father
+        //for we have enter the RPC node and Input node at the same time
+        //and the input is the only child of RPC node.
+        String curNodeName = ydtBuilder.getCurNode().getName();
+        if (rpcModule != null && curNodeName.equals(rpcModule.getName())) {
+            ydtBuilder.traverseToParent();
+        }
     }
 
     private void processArrayNode(String fieldName, JsonNode node) {
@@ -85,17 +104,20 @@ public class JsonToYdtListener implements JsonListener {
         while (elements.hasNext()) {
             JsonNode element = elements.next();
             JsonNodeType eleType = element.getNodeType();
-            if (eleType == JsonNodeType.STRING ||
-                    eleType == JsonNodeType.NUMBER
-                    ) {
+
+            if (eleType == JsonNodeType.STRING
+                    || eleType == JsonNodeType.NUMBER
+                    || eleType == JsonNodeType.BOOLEAN) {
                 sets.add(element.asText());
             } else {
                 isLeafList = false;
             }
         }
         if (isLeafList) {
+            //leaf-list
             ydtBuilder.addLeaf(fieldName, null, sets);
         } else {
+            //need to go into the array node
             ydtBuilder.addChild(fieldName, null, YdtType.MULTI_INSTANCE_NODE);
         }
     }

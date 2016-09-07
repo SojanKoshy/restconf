@@ -17,7 +17,6 @@ package org.onosproject.restconf.utils.parser.api;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 
 /**
  * Abstraction of an entity which provide call back methods which are called
@@ -41,8 +40,8 @@ public interface JsonListener {
      * All the related information about the node can be obtain from the JSON
      * node.
      *
-     * @param nodeType JSON node type of the node which has been walker through
+     * @param nodeType JSON node of the node which has been walker through
      */
-    void exitJsonNode(JsonNodeType nodeType);
+    void exitJsonNode(JsonNode nodeType);
 
 }
