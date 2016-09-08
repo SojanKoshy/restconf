@@ -36,17 +36,22 @@ public class YdtToJsonListener implements YdtListener {
     private String rootName;
     //the parse state
     private boolean isBegin;
+    private boolean isOver;
 
     public YdtToJsonListener(String rootName, JsonBuilder jsonBuilder) {
         this.jsonBuilder = jsonBuilder;
         this.rootName = rootName;
         this.isBegin = isNullOrEmpty(rootName);
+        this.isOver = false;
     }
 
     @Override
     public void enterYdtNode(YdtContext ydtContext) {
         String name = ydtContext.getName();
 
+        if (isOver) {
+            return;
+        }
         if (name.equals(rootName)) {
             isBegin = true;
         }
@@ -112,6 +117,9 @@ public class YdtToJsonListener implements YdtListener {
             default:
                 throw new YdtParseException("unknown Ydt type"
                                                     + ydtContext.getYdtType().toString());
+        }
+        if (curName.equals(rootName)) {
+            isOver = true;
         }
     }
 }

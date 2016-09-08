@@ -23,6 +23,7 @@ import org.onosproject.restconf.utils.exceptions.JsonParseException;
 import org.onosproject.restconf.utils.parser.api.JsonListener;
 import org.onosproject.yms.ydt.YdtBuilder;
 import org.onosproject.yms.ydt.YdtContext;
+import org.onosproject.yms.ydt.YdtContextOperationType;
 import org.onosproject.yms.ydt.YdtType;
 
 import java.util.HashSet;
@@ -40,9 +41,11 @@ public class JsonToYdtListener implements JsonListener {
     private static final String INPUT_FIELD_NAME = "input";
     private static final int INPUT_FIELD_LENGTH = 2;
     private YdtContext rpcModule;
+    private YdtContextOperationType defaultOpType;
 
-    public JsonToYdtListener(YdtBuilder ydtBuilder) {
+    public JsonToYdtListener(YdtBuilder ydtBuilder, YdtContextOperationType defaultOpType) {
         this.ydtBuilder = ydtBuilder;
+        this.defaultOpType = defaultOpType;
     }
 
     @Override
@@ -51,13 +54,16 @@ public class JsonToYdtListener implements JsonListener {
             return;
         }
 
+//        ydtBuilder.setDefaultEditOperationType(defaultOpType);
+
         switch (node.getNodeType()) {
             case OBJECT:
                 //for input, the filed name is something like
                 String[] segments = fieldName.split(":");
-                Boolean isLastInput = segments[INPUT_FIELD_LENGTH - 1].equals(INPUT_FIELD_NAME);
+                Boolean isLastInput = segments.length == INPUT_FIELD_LENGTH &&
+                        segments[INPUT_FIELD_LENGTH - 1].equals(INPUT_FIELD_NAME);
 
-                if (segments.length == INPUT_FIELD_LENGTH && isLastInput) {
+                if (isLastInput) {
                     ydtBuilder.addChild(segments[0], null, YdtType.SINGLE_INSTANCE_NODE);
                     rpcModule = ydtBuilder.getCurNode();
                     ydtBuilder.addChild(segments[1], null, YdtType.SINGLE_INSTANCE_NODE);
@@ -90,8 +96,11 @@ public class JsonToYdtListener implements JsonListener {
         //if the current node is the RPC node, then should go to the father
         //for we have enter the RPC node and Input node at the same time
         //and the input is the only child of RPC node.
-        String curNodeName = ydtBuilder.getCurNode().getName();
-        if (rpcModule != null && curNodeName.equals(rpcModule.getName())) {
+        if (ydtBuilder.getCurNode() == null) {
+            return;
+        }
+        String name = ydtBuilder.getCurNode().getName();
+        if (rpcModule != null && name.equals(rpcModule.getName())) {
             ydtBuilder.traverseToParent();
         }
     }

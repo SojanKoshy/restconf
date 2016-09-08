@@ -94,9 +94,10 @@ public final class ParserUtils {
      * @param objectNode the objectNode from web request.
      * @param builder    the base ydt builder
      */
-    public static void convertJsonToYdt(ObjectNode objectNode, YdtBuilder builder) {
+    public static void convertJsonToYdt(ObjectNode objectNode, YdtBuilder builder,
+                                        YdtContextOperationType defaultYdtOpType) {
         JsonWalker walker = new DefaultJsonWalker();
-        JsonToYdtListener listener = new JsonToYdtListener(builder);
+        JsonToYdtListener listener = new JsonToYdtListener(builder, defaultYdtOpType);
         walker.walk(listener, null, objectNode);
     }
 
@@ -127,7 +128,7 @@ public final class ParserUtils {
             return builder;
         }
         boolean isLastNode = paths.size() == 1;
-        YdtContextOperationType opTypeForThisNode = isLastNode ? ydtOpType : null;
+        YdtContextOperationType opTypeForThisNode = isLastNode ? ydtOpType : YdtContextOperationType.NONE;
 
         final String path = paths.iterator().next();
         if (path.contains(COLON)) {
@@ -136,7 +137,7 @@ public final class ParserUtils {
         } else if (path.contains(EQUAL)) {
             addListOrLeafList(path, builder);
         } else {
-            return addLeaf(path, builder, opTypeForThisNode);
+            addLeaf(path, builder, opTypeForThisNode);
         }
 
         if (paths.size() == 1) {
@@ -175,13 +176,11 @@ public final class ParserUtils {
         if (keyStr.contains(COMMA)) {
             List<String> keys = Lists.newArrayList(COMMA_SPLITTER.split(keyStr));
             builder.addChild(nodeName, null, YdtType.MULTI_INSTANCE_NODE);
-            //builder.addKeyLeafs(keys);
+            builder.addMultiInstanceChild(nodeName, null, keys);
         } else {
             //TODO need to check the interface,
             //TODO for it should be a MULTI_INSTANCE_LEAF_VALUE_NODE here
-            List<String> strings = Lists.newArrayList(keyStr);
-            builder.addChild(nodeName, null);
-            //builder.addLeaf(nodeName, null, keyStr);
+            builder.addMultiInstanceChild(nodeName, null, Lists.newArrayList(keyStr));
         }
         return builder;
     }

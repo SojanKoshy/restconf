@@ -79,7 +79,7 @@ public class RestconfManager implements RestconfService {
         YdtBuilder ydtBuilder = ymsService.getYdtBuilder(getRestconfRootPath(), null,
                                                          YmsOperationType.QUERY_REQUEST);
         //Convert the URI to ydtBuilder
-        ParserUtils.convertUriToYdt(identifier, ydtBuilder, null);
+        ParserUtils.convertUriToYdt(identifier, ydtBuilder, YdtContextOperationType.NONE);
         //Execute the query operation
         YdtResponse ydtResponse = ymsService.executeOperation(ydtBuilder);
         //TODO implement the exception process when YMS is ready
@@ -98,10 +98,13 @@ public class RestconfManager implements RestconfService {
     @Override
     public void doPostOperation(String identifier, ObjectNode rootNode) {
         //Get a root ydtBuilder
-        YdtBuilder ydtBuilder = ymsService.getYdtBuilder(getRestconfRootPath(), null, YmsOperationType.EDIT_CONFIG_REQUEST);
+        YdtBuilder ydtBuilder = ymsService.getYdtBuilder(getRestconfRootPath(), null,
+                                                         YmsOperationType.EDIT_CONFIG_REQUEST);
         //Convert the URI to ydtBuilder
         ParserUtils.convertUriToYdt(identifier, ydtBuilder, YdtContextOperationType.CREATE);
-        ParserUtils.convertJsonToYdt(rootNode, ydtBuilder);
+        ydtBuilder.setDefaultEditOperationType(YdtContextOperationType.CREATE);
+        ParserUtils.convertJsonToYdt(rootNode, ydtBuilder, YdtContextOperationType.CREATE);
+//        ydtBuilder.setDefaultEditOperationType(YdtContextOperationType.CREATE);
         //Execute the query operation
         YdtResponse ydtResponse = ymsService.executeOperation(ydtBuilder);
         YmsOperationExecutionStatus executionStatus = ydtResponse.getYmsOperationResult();
@@ -115,10 +118,12 @@ public class RestconfManager implements RestconfService {
     @Override
     public void doPutOperation(String identifier, ObjectNode rootNode) throws RestconfException {
         //Get a root ydtBuilder
-        YdtBuilder ydtBuilder = ymsService.getYdtBuilder(getRestconfRootPath(), null, YmsOperationType.EDIT_CONFIG_REQUEST);
+        YdtBuilder ydtBuilder = ymsService.getYdtBuilder(getRestconfRootPath(), null,
+                                                         YmsOperationType.EDIT_CONFIG_REQUEST);
         //Convert the URI to ydtBuilder
         ParserUtils.convertUriToYdt(identifier, ydtBuilder, YdtContextOperationType.REPLACE);
-        ParserUtils.convertJsonToYdt(rootNode, ydtBuilder);
+        ydtBuilder.setDefaultEditOperationType(YdtContextOperationType.REPLACE);
+        ParserUtils.convertJsonToYdt(rootNode, ydtBuilder, YdtContextOperationType.REPLACE);
         //Execute the query operation
         YdtResponse ydtResponse = ymsService.executeOperation(ydtBuilder);
         YmsOperationExecutionStatus executionStatus = ydtResponse.getYmsOperationResult();
@@ -132,7 +137,8 @@ public class RestconfManager implements RestconfService {
     @Override
     public void doDeleteOperation(String identifier) throws RestconfException {
         //Get a root ydtBuilder
-        YdtBuilder ydtBuilder = ymsService.getYdtBuilder(getRestconfRootPath(), null, YmsOperationType.EDIT_CONFIG_REQUEST);
+        YdtBuilder ydtBuilder = ymsService.getYdtBuilder(getRestconfRootPath(), null,
+                                                         YmsOperationType.EDIT_CONFIG_REQUEST);
         //Convert the URI to ydtBuilder
         ParserUtils.convertUriToYdt(identifier, ydtBuilder, YdtContextOperationType.DELETE);
         //Execute the query operation

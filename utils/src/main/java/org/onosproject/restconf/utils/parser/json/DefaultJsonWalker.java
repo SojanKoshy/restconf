@@ -113,7 +113,8 @@ public class DefaultJsonWalker implements JsonWalker {
         //all children is not container, it's a leaf-list in YANG.
         if (unContainerNodeCount == total) {
             jsonListener.enterJsonNode(fieldName, rootNode);
+            jsonListener.exitJsonNode(rootNode);
         }
-        jsonListener.exitJsonNode(rootNode);
+
     }
 }
