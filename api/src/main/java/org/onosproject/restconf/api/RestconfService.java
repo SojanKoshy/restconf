@@ -56,6 +56,16 @@ public interface RestconfService {
      */
     void doDeleteOperation(String uri) throws RestconfException;
 
+
+    /**
+     * Process the patch operation on a data resource.
+     *
+     * @param uri      URI of the data resource to be patched.
+     * @param rootNode JSON representation of the data resource.
+     * @throws RestconfException
+     */
+    void doPatchOperation(String uri, ObjectNode rootNode) throws RestconfException;
+
     /**
      * Retrieve the RESTCONF Root directory.
      *

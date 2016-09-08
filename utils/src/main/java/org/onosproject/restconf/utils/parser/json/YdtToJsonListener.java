@@ -54,6 +54,7 @@ public class YdtToJsonListener implements YdtListener {
         }
         if (name.equals(rootName)) {
             isBegin = true;
+            return;
         }
         if (!isBegin) {
             return;

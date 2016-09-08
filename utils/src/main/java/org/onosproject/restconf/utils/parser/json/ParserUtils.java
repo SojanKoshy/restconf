@@ -135,7 +135,7 @@ public final class ParserUtils {
             addModule(builder, path);
             addNode(path, builder, opTypeForThisNode);
         } else if (path.contains(EQUAL)) {
-            addListOrLeafList(path, builder);
+            addListOrLeafList(path, builder, opTypeForThisNode);
         } else {
             addLeaf(path, builder, opTypeForThisNode);
         }
@@ -166,22 +166,25 @@ public final class ParserUtils {
         return builder;
     }
 
-    private static YdtBuilder addListOrLeafList(String path, YdtBuilder builder) {
+    private static YdtBuilder addListOrLeafList(String path, YdtBuilder builder, YdtContextOperationType opTypeForThisNode) {
         String nodeName = getPreSegment(path, EQUAL);
         String keyStr = getPostSegment(path, EQUAL);
         if (keyStr == null) {
             throw new JsonParseException("Illegal URI, List/Leaf-list node should " +
                                                  "be in format \"nodeName=key\"or \"nodeName=instance-value\"");
         }
+        builder.setDefaultEditOperationType(opTypeForThisNode);
         if (keyStr.contains(COMMA)) {
             List<String> keys = Lists.newArrayList(COMMA_SPLITTER.split(keyStr));
-            builder.addChild(nodeName, null, YdtType.MULTI_INSTANCE_NODE);
+//            builder.addChild(nodeName, null, YdtType.MULTI_INSTANCE_NODE);
             builder.addMultiInstanceChild(nodeName, null, keys);
         } else {
             //TODO need to check the interface,
             //TODO for it should be a MULTI_INSTANCE_LEAF_VALUE_NODE here
             builder.addMultiInstanceChild(nodeName, null, Lists.newArrayList(keyStr));
         }
+
+        builder.traverseToParent();
         return builder;
     }
 

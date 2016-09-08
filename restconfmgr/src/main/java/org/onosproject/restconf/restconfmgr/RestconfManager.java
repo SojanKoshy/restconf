@@ -36,6 +36,8 @@ import org.onosproject.yms.ymsm.YmsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.Response;
+
 /*
  * Skeletal ONOS RESTCONF Server application. The RESTCONF Manager
  * implements the main logic of the RESTCONF Server.
@@ -83,11 +85,11 @@ public class RestconfManager implements RestconfService {
         //Execute the query operation
         YdtResponse ydtResponse = ymsService.executeOperation(ydtBuilder);
         //TODO implement the exception process when YMS is ready
-//        YmsOperationExecutionStatus executionStatus = ydtResponse.getYmsOperationResult();
-//        if (executionStatus != YmsOperationExecutionStatus.EXECUTION_SUCCESS) {
-//            throw new RestconfException("YMS query operation failed",
-//                    Response.Status.INTERNAL_SERVER_ERROR);
-//        }
+        YmsOperationExecutionStatus executionStatus = ydtResponse.getYmsOperationResult();
+        if (executionStatus != YmsOperationExecutionStatus.EXECUTION_SUCCESS) {
+            throw new RestconfException("YMS query operation failed",
+                    Response.Status.INTERNAL_SERVER_ERROR);
+        }
         //this is a root node, need to find the query node.
         YdtContext rootNode = ydtResponse.getRootNode();
         String requestNodeName = ParserUtils.getLastSegmentNodeName(identifier);
@@ -102,17 +104,17 @@ public class RestconfManager implements RestconfService {
                                                          YmsOperationType.EDIT_CONFIG_REQUEST);
         //Convert the URI to ydtBuilder
         ParserUtils.convertUriToYdt(identifier, ydtBuilder, YdtContextOperationType.CREATE);
+
+        //set default operation type for the payload node
         ydtBuilder.setDefaultEditOperationType(YdtContextOperationType.CREATE);
         ParserUtils.convertJsonToYdt(rootNode, ydtBuilder, YdtContextOperationType.CREATE);
-//        ydtBuilder.setDefaultEditOperationType(YdtContextOperationType.CREATE);
         //Execute the query operation
         YdtResponse ydtResponse = ymsService.executeOperation(ydtBuilder);
         YmsOperationExecutionStatus executionStatus = ydtResponse.getYmsOperationResult();
-        //TODO implement the exception process when YMS is ready
-//        if (executionStatus != YmsOperationExecutionStatus.EXECUTION_SUCCESS) {
-//            throw new RestconfException("YMS post operation failed.",
-//                    Response.Status.INTERNAL_SERVER_ERROR);
-//        }
+        if (executionStatus != YmsOperationExecutionStatus.EXECUTION_SUCCESS) {
+            throw new RestconfException("YMS post operation failed.",
+                                        Response.Status.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Override
@@ -127,11 +129,10 @@ public class RestconfManager implements RestconfService {
         //Execute the query operation
         YdtResponse ydtResponse = ymsService.executeOperation(ydtBuilder);
         YmsOperationExecutionStatus executionStatus = ydtResponse.getYmsOperationResult();
-        //TODO implement the exception process when YMS is ready
-//        if (executionStatus != YmsOperationExecutionStatus.EXECUTION_SUCCESS) {
-//            throw new RestconfException("YMS put operation failed.",
-//                    Response.Status.INTERNAL_SERVER_ERROR);
-//        }
+        if (executionStatus != YmsOperationExecutionStatus.EXECUTION_SUCCESS) {
+            throw new RestconfException("YMS put operation failed.",
+                    Response.Status.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Override
@@ -144,11 +145,28 @@ public class RestconfManager implements RestconfService {
         //Execute the query operation
         YdtResponse ydtResponse = ymsService.executeOperation(ydtBuilder);
         YmsOperationExecutionStatus executionStatus = ydtResponse.getYmsOperationResult();
-        //TODO implement the exception process when YMS is ready
-//        if (executionStatus != YmsOperationExecutionStatus.EXECUTION_SUCCESS) {
-//            throw new RestconfException("YMS put operation failed.",
-//                    Response.Status.INTERNAL_SERVER_ERROR);
-//        }
+        if (executionStatus != YmsOperationExecutionStatus.EXECUTION_SUCCESS) {
+            throw new RestconfException("YMS put operation failed.",
+                    Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public void doPatchOperation(String identifier, ObjectNode rootNode) throws RestconfException {
+        //Get a root ydtBuilder
+        YdtBuilder ydtBuilder = ymsService.getYdtBuilder(getRestconfRootPath(), null,
+                                                         YmsOperationType.EDIT_CONFIG_REQUEST);
+        //Convert the URI to ydtBuilder
+        ParserUtils.convertUriToYdt(identifier, ydtBuilder, YdtContextOperationType.MERGE);
+        ydtBuilder.setDefaultEditOperationType(YdtContextOperationType.MERGE);
+        ParserUtils.convertJsonToYdt(rootNode, ydtBuilder, YdtContextOperationType.MERGE);
+        //Execute the query operation
+        YdtResponse ydtResponse = ymsService.executeOperation(ydtBuilder);
+        YmsOperationExecutionStatus executionStatus = ydtResponse.getYmsOperationResult();
+        if (executionStatus != YmsOperationExecutionStatus.EXECUTION_SUCCESS) {
+            throw new RestconfException("YMS put operation failed.",
+                                        Response.Status.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Override

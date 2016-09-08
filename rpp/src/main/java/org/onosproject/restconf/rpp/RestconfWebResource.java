@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.glassfish.jersey.server.ChunkedOutput;
 import org.onosproject.rest.AbstractWebResource;
+import org.onosproject.restconf.api.PATCH;
 import org.onosproject.restconf.api.RestconfException;
 import org.onosproject.restconf.api.RestconfService;
 import org.slf4j.Logger;
@@ -188,6 +189,39 @@ public class RestconfWebResource extends AbstractWebResource {
         } catch (RestconfException e) {
             log.error("ERROR: handleDeleteRequest: {}", e.getMessage(), e);
             return e.getResponse();
+        }
+    }
+
+    /**
+     * Handle the RESTCONF PATCH Operation against a data resource.
+     *
+     * @param uriString URI of the data resource.
+     * @param stream    Input JSON object
+     * @return "201 Created" on success and there is no response message-body.
+     * "409 Conflict" if the data resource already exists.
+     */
+    @PATCH
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("data/{identifier : .+}")
+    public Response handlePatchRequest(@PathParam("identifier") String uriString, InputStream stream) {
+
+        log.info("handlePostRequest: {}", uriString);
+
+        try {
+            ObjectNode rootNode = (ObjectNode) mapper().readTree(stream);
+
+            service.doPatchOperation(uriString, rootNode);
+            return Response.noContent().build();
+        } catch (JsonProcessingException e) {
+            log.error("ERROR: handlePostRequest ", e);
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        } catch (RestconfException e) {
+            log.error("ERROR: handlePostRequest: {}", e.getMessage(), e);
+            return e.getResponse();
+        } catch (IOException ex) {
+            log.error("ERROR: handlePostRequest ", ex);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 
